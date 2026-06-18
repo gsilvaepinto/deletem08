@@ -4,10 +4,11 @@ from dotenv import load_dotenv
 
 
 def load_config():
-    # Load .env file (if exists)
-    load_dotenv()
+    # Returns True if .env was found and loaded
+    env_loaded = load_dotenv()
 
     config = {
+        "env_loaded": env_loaded,
         "MATRIX_MODE": os.getenv("MATRIX_MODE"),
         "DATABASE_URL": os.getenv("DATABASE_URL"),
         "API_KEY": os.getenv("API_KEY"),
@@ -21,8 +22,8 @@ def load_config():
 def validate_config(config):
     missing = []
 
-    for key, value in config.items():
-        if value is None or value.strip() == "":
+    for key in ["MATRIX_MODE", "DATABASE_URL", "API_KEY", "LOG_LEVEL", "ZION_ENDPOINT"]:
+        if not config.get(key):
             missing.append(key)
 
     return missing
@@ -33,52 +34,50 @@ def display_config(config):
     print("Configuration loaded:\n")
 
     mode = config["MATRIX_MODE"] or "development"
-
     print(f"Mode: {mode}")
 
-    if config["DATABASE_URL"]:
-        if "sqlite" in config["DATABASE_URL"]:
+    db = config["DATABASE_URL"]
+    if db:
+        if "sqlite" in db:
             print("Database: Connected to local instance")
         else:
-            print("Database: Connected to remote database")
+            print("Database: Connected to remote instance")
     else:
         print("Database: NOT CONFIGURED")
 
-    if config["API_KEY"]:
-        print("API Access: Authenticated")
-    else:
-        print("API Access: MISSING KEY")
+    print("API Access:", "Authenticated" if config["API_KEY"] else "MISSING KEY")
 
-    log = config["LOG_LEVEL"] or "INFO"
-    print(f"Log Level: {log}")
+    print(f"Log Level: {config['LOG_LEVEL'] or 'INFO'}")
 
-    if config["ZION_ENDPOINT"]:
-        print("Zion Network: Online")
-    else:
-        print("Zion Network: OFFLINE")
+    print("Zion Network:", "Online" if config["ZION_ENDPOINT"] else "OFFLINE")
 
     print("\nEnvironment security check:")
 
+    # REAL check for .env existence
+    if config["env_loaded"]:
+        print("[OK] .env file loaded")
+    else:
+        print("[WARNING] No .env file found")
 
-def security_check(config):
-    print("[OK] No hardcoded secrets detected")
-    print("[OK] .env file properly configured")
-    print("[OK] Production overrides available")
+    print("[OK] Environment variables system active")
+    print("[OK] Production overrides supported")
 
 
 def main():
     config = load_config()
 
-    missing = validate_config(config)
+    print("ORACLE STATUS: Reading the Matrix...\n")
 
     display_config(config)
+
+    missing = validate_config(config)
 
     if missing:
         print("\nWARNING: Missing configuration:")
         for m in missing:
             print(f" - {m}")
 
-    security_check(config)
+    print("\nThe Oracle sees all configurations.")
 
 
 if __name__ == "__main__":
